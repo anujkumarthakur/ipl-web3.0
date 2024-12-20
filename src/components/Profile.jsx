@@ -15,6 +15,43 @@ const Profile = () => {
         ],
     });
 
+    const [amount, setAmount] = useState('');
+    const [useDefaultWallet, setUseDefaultWallet] = useState(true);
+    const [customAddress, setCustomAddress] = useState('');
+    const [message, setMessage] = useState('');
+
+    // Handle Withdrawal Logic
+    const handleWithdraw = () => {
+        if (!amount || amount <= 0) {
+            alert('Please enter a valid withdrawal amount.');
+            return;
+        }
+
+        if (amount > user.balance) {
+            alert('Insufficient balance.');
+            return;
+        }
+
+        const withdrawalAddress = useDefaultWallet ? user.walletAddress : customAddress;
+
+        if (!withdrawalAddress) {
+            alert('Please enter a valid crypto address.');
+            return;
+        }
+
+        // Simulate withdrawal process
+        setUser((prevUser) => ({
+            ...prevUser,
+            balance: prevUser.balance - amount,
+        }));
+
+        setMessage(`Withdrawal of ${amount} tokens to ${withdrawalAddress} was successful.`);
+
+        // Reset form fields
+        setAmount('');
+        setCustomAddress('');
+    };
+
     return (
         <div className="min-h-screen bg-gray-100 py-8">
             <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 relative">
@@ -89,11 +126,68 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* Update Info Button */}
-                <div className="flex justify-center">
-                    <button className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition duration-300">
-                        Update Information
-                    </button>
+                {/* Withdraw Section */}
+                <div className="bg-gray-50 p-6 rounded-lg shadow mb-8">
+                    <h4 className="text-xl font-semibold mb-4">Withdraw Tokens</h4>
+
+                    <div className="space-y-4">
+                        {/* Amount Input */}
+                        <div>
+                            <label className="block text-gray-700 font-semibold mb-2">Withdrawal Amount</label>
+                            <input
+                                type="number"
+                                value={amount}
+                                onChange={(e) => setAmount(Number(e.target.value))}
+                                placeholder="Enter amount to withdraw"
+                                className="w-full p-2 border rounded"
+                            />
+                        </div>
+
+                        {/* Wallet Address Selection */}
+                        <div>
+                            <label className="block text-gray-700 font-semibold mb-2">Withdraw To</label>
+                            <div className="flex items-center mb-2">
+                                <input
+                                    type="radio"
+                                    checked={useDefaultWallet}
+                                    onChange={() => setUseDefaultWallet(true)}
+                                    className="mr-2"
+                                />
+                                <span>Default Wallet Address: <span className="font-mono">{user.walletAddress}</span></span>
+                            </div>
+                            <div className="flex items-center">
+                                <input
+                                    type="radio"
+                                    checked={!useDefaultWallet}
+                                    onChange={() => setUseDefaultWallet(false)}
+                                    className="mr-2"
+                                />
+                                <span>Other Wallet Address:</span>
+                            </div>
+                            {!useDefaultWallet && (
+                                <input
+                                    type="text"
+                                    value={customAddress}
+                                    onChange={(e) => setCustomAddress(e.target.value)}
+                                    placeholder="Enter custom crypto address"
+                                    className="w-full p-2 border rounded mt-2"
+                                />
+                            )}
+                        </div>
+
+                        {/* Withdraw Button */}
+                        <button
+                            onClick={handleWithdraw}
+                            className="w-full p-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded"
+                        >
+                            Withdraw
+                        </button>
+
+                        {/* Success Message */}
+                        {message && (
+                            <p className="mt-4 text-lg font-semibold text-green-600 text-center">{message}</p>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
