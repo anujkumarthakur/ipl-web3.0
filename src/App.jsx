@@ -9,6 +9,8 @@ import BuyTokenPage from './components/BuyTokenPage'; // Import BuyTokenPage
 import MatchProfile from './components/MatchProfile';
 import Profile from './components/Profile';
 
+// Add icons to the library
+
 function App() {
   return (
     <Router>

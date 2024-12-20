@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Login = ({ toggleView }) => {
+const Login = () => {
+    const navigate = useNavigate();
+
     return (
         <div className="flex justify-center items-center min-h-screen bg-gray-100">
             <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
@@ -41,13 +44,13 @@ const Login = ({ toggleView }) => {
 
                 <p className="mt-4 text-center text-sm text-gray-600">
                     Don't have an account?{' '}
-                    <button onClick={() => toggleView('signup')} className="text-blue-500 hover:underline">
+                    <button onClick={() => navigate('/signup')} className="text-blue-500 hover:underline">
                         Sign Up
                     </button>
                 </p>
 
                 <p className="mt-2 text-center text-sm text-gray-600">
-                    <button onClick={() => toggleView('forgot')} className="text-blue-500 hover:underline">
+                    <button onClick={() => navigate('/forgot-password')} className="text-blue-500 hover:underline">
                         Forgot Password?
                     </button>
                 </p>

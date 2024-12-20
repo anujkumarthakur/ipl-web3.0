@@ -1,6 +1,7 @@
 import React from 'react';
-
-const Signup = ({ toggleView }) => {
+import { useNavigate } from 'react-router-dom';
+const Signup = () => {
+    const navigate = useNavigate();
     return (
         <div className="flex justify-center items-center min-h-screen bg-gray-100">
             <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
@@ -53,7 +54,7 @@ const Signup = ({ toggleView }) => {
 
                 <p className="mt-4 text-center text-sm text-gray-600">
                     Already have an account?{' '}
-                    <button onClick={() => toggleView('login')} className="text-blue-500 hover:underline">
+                    <button onClick={() => navigate('/login')} className="text-blue-500 hover:underline">
                         Login
                     </button>
                 </p>
