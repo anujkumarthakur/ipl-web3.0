@@ -3,6 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { useToken } from '../context/TokenContext';
+import { useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Register necessary Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -33,8 +37,12 @@ const matchData = {
 const MatchProfile = () => {
     const { matchId } = useParams();
     const navigate = useNavigate();
-
+    const { balance, updateBalance } = useToken();
     const match = matchData[matchId];
+    const [selectedTeam, setSelectedTeam] = useState('');
+    const [betAmount, setBetAmount] = useState('');
+    const [betResult, setBetResult] = useState(null);
+    const [betOnWinning, setBetOnWinning] = useState(true); // Track if the bet is on winning or losing team
 
     if (!match) {
         return (
@@ -99,6 +107,46 @@ const MatchProfile = () => {
         }
     };
 
+    const handleBet = () => {
+        const amount = parseInt(betAmount);
+        if (!selectedTeam) {
+            toast.error('Please select a team to bet on.');
+            return;
+        }
+        if (isNaN(amount) || amount <= 0) {
+            toast.error('Please enter a valid bet amount.');
+            return;
+        }
+        if (amount > balance) {
+            toast.error('Insufficient token balance.');
+            return;
+        }
+
+        // Show toast notification for bet placement
+        toast.success('Your bet has been placed! Waiting for match results...');
+
+        // Simulate random match result
+        const winningTeam = Math.random() < 0.5 ? 'India' : 'Pakistan';
+        const losingTeam = winningTeam === 'India' ? 'Pakistan' : 'India';
+        const userWon = betOnWinning ? selectedTeam === winningTeam : selectedTeam === losingTeam;
+
+        // Delay to simulate match completion
+        setTimeout(() => {
+            if (userWon) {
+                updateBalance(amount); // Win: Double the bet amount
+                setBetResult(`🎉 Congratulations! You won the bet. ${winningTeam} won the match.`);
+                toast.success(`You won! ${winningTeam} won the match. Tokens have been added.`);
+            } else {
+                updateBalance(-amount); // Lose: Deduct the bet amount
+                setBetResult(`😞 Sorry, you lost the bet. ${winningTeam} won the match.`);
+                toast.error(`You lost! ${winningTeam} won the match. Better luck next time.`);
+            }
+            setBetAmount('');
+            setSelectedTeam('');
+        }, 3000); // 3-second delay to simulate match completion
+    };
+
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-6">
             <button
@@ -116,6 +164,68 @@ const MatchProfile = () => {
                     <p className="text-lg font-semibold text-gray-600">{match.status_s}</p>
                     <p className="text-sm text-gray-500">{match.location} | {match.date}</p>
                 </div>
+
+                {/* Betting Section */}
+                {/* Betting Section */}
+                <div className="mt-6 flex flex-col items-center justify-center">
+                    <h3 className="text-2xl font-bold mb-6 text-purple-700">Place Your Bet</h3>
+                    <p className="text-lg mb-4">
+                        Your Token Balance: <strong className="text-green-600">{balance}</strong> tokens
+                    </p>
+
+                    <div className="flex gap-4 mb-4">
+                        <button
+                            className={`p-3 rounded-lg ${selectedTeam === 'India' ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-blue-300'}`}
+                            onClick={() => setSelectedTeam('India')}
+                        >
+                            Bet on India
+                        </button>
+                        <button
+                            className={`p-3 rounded-lg ${selectedTeam === 'Pakistan' ? 'bg-red-500 text-white' : 'bg-gray-200 hover:bg-red-300'}`}
+                            onClick={() => setSelectedTeam('Pakistan')}
+                        >
+                            Bet on Pakistan
+                        </button>
+                    </div>
+
+                    <div className="flex gap-4 mb-4">
+                        <button
+                            onClick={() => setBetOnWinning(true)}
+                            className={`p-3 rounded-lg ${betOnWinning ? 'bg-green-500 text-white' : 'bg-gray-200 hover:bg-green-300'}`}
+                        >
+                            Bet on Winning Team
+                        </button>
+                        <button
+                            onClick={() => setBetOnWinning(false)}
+                            className={`p-3 rounded-lg ${!betOnWinning ? 'bg-orange-500 text-white' : 'bg-gray-200 hover:bg-orange-300'}`}
+                        >
+                            Bet on Losing Team
+                        </button>
+                    </div>
+
+                    <input
+                        type="number"
+                        placeholder="Enter bet amount"
+                        value={betAmount}
+                        onChange={(e) => setBetAmount(e.target.value)}
+                        className="p-3 border rounded-lg w-3/4 mb-6 text-center"
+                    />
+
+                    <button
+                        onClick={handleBet}
+                        className="w-3/4 p-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition duration-300"
+                    >
+                        Place Bet
+                    </button>
+
+                    {betResult && (
+                        <p className="mt-6 text-lg font-semibold text-center text-gray-700">{betResult}</p>
+                    )}
+
+                    {/* Toast Container */}
+                    <ToastContainer />
+                </div>
+
 
                 {/* Match Details */}
                 <div className="mb-6">
@@ -158,6 +268,8 @@ const MatchProfile = () => {
                 <div className="mb-6">
                     <Line data={chartData} options={chartOptions} />
                 </div>
+
+
             </div>
         </div>
     );
