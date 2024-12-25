@@ -1,12 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import loginBgImage from '../assets/login-bg-image.jpg';
 
 const ForgetPassword = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+        <div
+            className="flex justify-center items-center min-h-screen"
+            style={{
+                backgroundImage: `url(${loginBgImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+            }}
+        >            <div className="bg-white/90 p-8 rounded-lg shadow-2xl max-w-md w-full border-t-4 border-indigo-500">
                 <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Forgot Password</h2>
 
                 <form>
@@ -32,7 +39,7 @@ const ForgetPassword = () => {
 
                 <p className="mt-4 text-center text-sm text-gray-600">
                     Remember your password?{' '}
-                    <button onClick={() => navigate('/login')} className="text-blue-500 hover:underline">
+                    <button onClick={() => navigate('/')} className="text-blue-500 hover:underline">
                         Login
                     </button>
                 </p>
