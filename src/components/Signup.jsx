@@ -1,9 +1,55 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import loginBgImage from '../assets/login-bg-image2.jpg';
 
 const Signup = () => {
     const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: '',
+    });
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    const handleChange = (e) => {
+        const { id, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [id]: value,
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+
+        try {
+            const response = await fetch('http://localhost:8080/api/v1/users/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSuccess('User registered successfully');
+                // Redirect to another page or clear the form after a delay
+                setTimeout(() => {
+                    navigate('/');
+                }, 2000);
+            } else {
+                setError(data.message || 'Failed to register. Please try again.');
+            }
+        } catch (err) {
+            setError('An error occurred while registering. Please try again.');
+        }
+    };
+
     return (
         <div
             className="flex justify-center items-center min-h-screen"
@@ -16,7 +62,10 @@ const Signup = () => {
             <div className="bg-white/90 p-8 rounded-lg shadow-2xl max-w-md w-full border-t-4 border-indigo-500">
                 <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Sign Up</h2>
 
-                <form>
+                {error && <div className="mb-4 text-red-600 text-center">{error}</div>}
+                {success && <div className="mb-4 text-green-600 text-center">{success}</div>}
+
+                <form onSubmit={handleSubmit}>
                     <div className="mb-6">
                         <label htmlFor="name" className="block text-sm font-semibold text-gray-600">
                             Name
@@ -24,8 +73,11 @@ const Signup = () => {
                         <input
                             type="text"
                             id="name"
+                            value={formData.name}
+                            onChange={handleChange}
                             placeholder="Enter your name"
                             className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+                            required
                         />
                     </div>
 
@@ -36,8 +88,11 @@ const Signup = () => {
                         <input
                             type="email"
                             id="email"
+                            value={formData.email}
+                            onChange={handleChange}
                             placeholder="Enter your email / phone number"
                             className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+                            required
                         />
                     </div>
 
@@ -48,8 +103,11 @@ const Signup = () => {
                         <input
                             type="password"
                             id="password"
+                            value={formData.password}
+                            onChange={handleChange}
                             placeholder="Enter your password"
                             className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+                            required
                         />
                     </div>
 

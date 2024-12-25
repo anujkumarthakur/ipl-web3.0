@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie'; // Import js-cookie to read cookies
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -19,6 +20,20 @@ const Profile = () => {
     const [useDefaultWallet, setUseDefaultWallet] = useState(true);
     const [customAddress, setCustomAddress] = useState('');
     const [message, setMessage] = useState('');
+
+    useEffect(() => {
+        // Check if the token is present in cookies
+        const token = Cookies.get('token');
+
+        if (!token) {
+            // If no token, redirect to login page
+            navigate('/login');
+        } else {
+            // Optionally, you can verify the token by making an API request
+            // to check its validity and fetch user data
+            // For example, you could call an API endpoint to validate the token and fetch the user details
+        }
+    }, [navigate]);
 
     // Handle Withdrawal Logic
     const handleWithdraw = () => {

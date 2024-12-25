@@ -1,15 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
-
+import Cookies from 'js-cookie';
 const BuyTokenPage = () => {
+    const navigate = useNavigate();
     const [amount, setAmount] = useState(100);  // Default token amount to buy
     const [connected, setConnected] = useState(false);
     const [walletAddress, setWalletAddress] = useState('');
     const [provider, setProvider] = useState(null);
+    const [tokenValid, setTokenValid] = useState(false); // State for token validation
 
     // Your Solana address (where the money will go)
     const solanaAddress = 'YOUR_SOLANA_WALLET_ADDRESS';
+
+    const checkValidToken = () => {
+        const token = Cookies.get('token');  // Get token from cookies using js-cookie
+
+        if (token) {
+            setTokenValid(true);  // If token exists, set valid token
+        } else {
+            setTokenValid(false); // If no token, mark invalid
+            navigate('/login'); // Redirect to login page or any other action
+        }
+    };
 
     // Connect Phantom Wallet
     const connectWallet = async () => {
@@ -61,6 +74,9 @@ const BuyTokenPage = () => {
                 setConnected(true);
             });
         }
+
+        // Check if the user has a valid token on component mount
+        checkValidToken();
     }, []);
 
     return (
@@ -74,51 +90,54 @@ const BuyTokenPage = () => {
 
             <h2 className="text-2xl font-bold mb-4">Buy Tokens</h2>
 
-            {/* Displaying current wallet balance */}
-            {/* <div className="mb-6">
-                <h3 className="text-lg font-semibold">Current Wallet Balance:</h3>
-                <p className="text-2xl font-bold text-green-500">$100 (Fake Balance)</p>
-            </div> */}
+            {/* Check if the token is valid */}
+            {!tokenValid ? (
+                <div className="text-center text-red-500">
+                    <p>You need to be logged in to buy tokens.</p>
+                </div>
+            ) : (
+                <>
+                    {/* Connect Wallet Button */}
+                    <div className="mb-6">
+                        {!connected ? (
+                            <button
+                                onClick={connectWallet}
+                                className="w-full py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md hover:shadow-lg transition"
+                            >
+                                Connect Phantom Wallet
+                            </button>
+                        ) : (
+                            <p className="text-lg font-semibold">Wallet Connected: {walletAddress}</p>
+                        )}
+                    </div>
 
-            {/* Connect Wallet Button */}
-            <div className="mb-6">
-                {!connected ? (
-                    <button
-                        onClick={connectWallet}
-                        className="w-full py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md hover:shadow-lg transition"
-                    >
-                        Connect Phantom Wallet
-                    </button>
-                ) : (
-                    <p className="text-lg font-semibold">Wallet Connected: {walletAddress}</p>
-                )}
-            </div>
+                    {/* Token Amount Selection */}
+                    <div className="mb-6">
+                        <h3 className="text-lg font-semibold">Select Amount:</h3>
+                        <select
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md"
+                        >
+                            <option value={100}>100 IPLW3.0</option>
+                            <option value={200}>200 IPLW3.0</option>
+                            <option value={500}>500 IPLW3.0</option>
+                            <option value={1000}>1000 IPLW3.0</option>
+                        </select>
+                    </div>
 
-            {/* Token Amount Selection */}
-            <div className="mb-6">
-                <h3 className="text-lg font-semibold">Select Amount:</h3>
-                <select
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                >
-                    <option value={100}>100 IPLW3.0</option>
-                    <option value={200}>200 IPLW3.0</option>
-                    <option value={500}>500 IPLW3.0</option>
-                    <option value={1000}>1000 IPLW3.0</option>
-                </select>
-            </div>
-
-            {/* Buy Button */}
-            <div>
-                <button
-                    onClick={handleBuyTokens}
-                    className={`w-full py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg shadow-md hover:shadow-lg transition ${!connected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    disabled={!connected}
-                >
-                    Buy {amount} IPLW3.0
-                </button>
-            </div>
+                    {/* Buy Button */}
+                    <div>
+                        <button
+                            onClick={handleBuyTokens}
+                            className={`w-full py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg shadow-md hover:shadow-lg transition ${!connected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={!connected}
+                        >
+                            Buy {amount} IPLW3.0
+                        </button>
+                    </div>
+                </>
+            )}
         </div>
     );
 };

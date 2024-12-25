@@ -5,24 +5,26 @@ import Dashboard from './components/Dashboard';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import ForgetPassword from './components/ForgetPassword';
-import BuyTokenPage from './components/BuyTokenPage'; // Import BuyTokenPage
+import BuyTokenPage from './components/BuyTokenPage';
 import MatchProfile from './components/MatchProfile';
 import Profile from './components/Profile';
-
-// Add icons to the library
+import PrivateRoute from './PrivateRoute'; // Import PrivateRoute
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgetPassword />} />
-        <Route path="/buy-tokens" element={<BuyTokenPage />} /> {/* Route for buying tokens */}
-        <Route path="/match/:matchId" element={<MatchProfile />} />
-        <Route path="/profile" element={<Profile />} />
 
+        {/* Private Routes */}
+        <Route path="/dashboard" element={<PrivateRoute element={<Dashboard />} />} />
+        <Route path="/buy-tokens" element={<PrivateRoute element={<BuyTokenPage />} />} />
+        <Route path="/profile" element={<PrivateRoute element={<Profile />} />} />
+
+        {/* Match Profile route */}
+        <Route path="/match/:matchId" element={<PrivateRoute element={<MatchProfile />} />} />
       </Routes>
     </Router>
   );
