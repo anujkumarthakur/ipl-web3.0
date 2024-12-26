@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiMenu, FiX, FiUser, FiLogOut, FiCreditCard } from 'react-icons/fi';
 import Cookies from 'js-cookie';
+import loginBgImage from '../assets/rb_86547.png';
 
 const Dashboard = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -17,12 +18,20 @@ const Dashboard = () => {
     const fetchLiveMatches = async () => {
         try {
             const response = await fetch('http://localhost:8080/api/v1/live/matches');
-            const data = await response.json();
-            if (data.status && data.data) setLiveMatches(data.data);
+            const json = await response.json();
+            console.log('API Response:', json.data);  // Log the response to inspect the data
+            if (json.data.length > 0) {
+                setLiveMatches(json.data);  // Directly set the liveMatches without using .map()
+            } else {
+                console.log('No live matches found or status is false');
+            }
         } catch (error) {
             console.error('Error fetching live matches:', error);
         }
     };
+
+
+
 
     const fetchUpcomingMatches = async () => {
         try {
@@ -34,10 +43,16 @@ const Dashboard = () => {
         }
     };
 
-    useEffect(() => {
-        fetchLiveMatches();
-        fetchUpcomingMatches();
-    }, []);
+    const handleCategoryChange = (category) => {
+        setSelectedCategory(category);
+
+        if (category === 'live') {
+            fetchLiveMatches();  // Fetch live matches only when the "Live Matches" is clicked
+        } else if (category === 'upcoming') {
+            fetchUpcomingMatches();  // Fetch upcoming matches only when the "Upcoming Matches" is clicked
+        }
+    };
+
 
     const handleLogout = () => {
         Cookies.remove('token');
@@ -75,9 +90,20 @@ const Dashboard = () => {
                             <FiLogOut /> Logout
                         </button>
                     </nav>
+
+                    {/* Add image above the footer */}
+
                     <div className="mt-auto">
-                        <p className="text-sm opacity-75">&copy; 2024 IPL Gaming App</p>
+                        <div className="mt-6 mr-1 flex flex-col items-center justify-center h-40"> {/* Adjusted height and flex centering */}
+                            <img src={loginBgImage} alt="Sidebar Image" className="w-full h-auto rounded-lg shadow-md" />
+                        </div>
+
                     </div>
+                    <div className="mt-auto">
+
+                        <p className="text-sm opacity-75 text-center mt-4">&copy; 2024 IPL Gaming App</p> {/* Center text and added margin-top */}
+                    </div>
+
                 </div>
             </div>
 
@@ -103,10 +129,12 @@ const Dashboard = () => {
 
                     {/* Category Buttons */}
                     <div className="flex justify-center space-x-4 mb-6 flex-wrap">
-                        <button className={`px-6 py-2 rounded-full text-lg font-semibold transition ${selectedCategory === 'live' ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`} onClick={() => setSelectedCategory('live')}>
+                        <button className={`px-6 py-2 rounded-full text-lg font-semibold transition ${selectedCategory === 'live' ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                            onClick={() => handleCategoryChange('live')}>
                             Live Matches
                         </button>
-                        <button className={`px-6 py-2 rounded-full text-lg font-semibold transition ${selectedCategory === 'upcoming' ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`} onClick={() => setSelectedCategory('upcoming')}>
+                        <button className={`px-6 py-2 rounded-full text-lg font-semibold transition ${selectedCategory === 'upcoming' ? 'bg-purple-600 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`} onClick={() =>
+                            handleCategoryChange('upcoming')}>
                             Upcoming Matches
                         </button>
                     </div>
@@ -132,55 +160,43 @@ const Dashboard = () => {
 
                     {/* Match List */}
                     <div className="space-y-4">
-                        {selectedCategory === 'live' && filterMatchesByType(liveMatches).length > 0 ? (
-                            filterMatchesByType(liveMatches).map((match) => (
-                                <Link to={`/match/${match.match_id}`} key={match.match_id} className="block p-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg shadow-md hover:shadow-lg transition transform hover:scale-105">
+                        {selectedCategory === 'live' && liveMatches.length > 0 ? (
+                            liveMatches.map((match) => (
+                                <Link to={`/match/${match.id}`} key={match.id} className="block p-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg shadow-md hover:shadow-lg transition transform hover:scale-105">
                                     <div className="flex items-center justify-between">
                                         <div className="flex flex-col items-center">
-                                            <img src={match.team_a_img} alt={match.team_a} className="w-16 h-16 rounded-full object-cover" />
-                                            <h4 className="text-xs text-center">{match.team_a}</h4>
+                                            <img src={match.data.team_a_img} alt={match.data.team_a} className="w-16 h-16 rounded-full object-cover" />
+                                            <h4 className="text-xs text-center">{match.data.team_a}</h4>
                                         </div>
                                         <div className="flex flex-col justify-center items-center text-center">
-                                            <h4 className="text-xl font-bold">{match.team_a} vs {match.team_b}</h4>
+                                            <h4 className="text-xl font-bold">{match.data.team_a} vs {match.data.team_b}</h4>
                                         </div>
                                         <div className="flex flex-col items-center">
-                                            <img src={match.team_b_img} alt={match.team_b} className="w-16 h-16 rounded-full object-cover" />
-                                            <h4 className="text-xs text-center">{match.team_b}</h4>
+                                            <img src={match.data.team_b_img} alt={match.data.team_b} className="w-16 h-16 rounded-full object-cover" />
+                                            <h4 className="text-xs text-center">{match.data.team_b}</h4>
                                         </div>
                                     </div>
-
                                     <div className="mt-2 text-center">
-                                        <p className="text-sm">{match.match_status} | {match.match_time} {match.match_date}</p>
-                                        <p className="text-sm">{match.venue}</p>
-                                        <p className="text-sm">{match.toss}</p>
+                                        <p className="text-sm">{match.data.match_status} | {match.data.match_time} {match.data.match_date}</p>
+                                        <p className="text-sm">{match.data.venue}</p>
+                                        <p className="text-sm">{match.data.toss || 'Toss: Not available'}</p>
                                     </div>
 
                                     {/* Display Inning Information */}
                                     <div className="mt-4 text-sm">
-                                        {match.team_a_scores_over.length > 0 && match.team_a_scores_over[0] && (
+                                        {match.data.team_a_scores_over && match.data.team_a_scores_over.length > 0 && (
                                             <div className="mb-2">
-                                                <p className="font-semibold">{match.team_a} (Inning) / Score: {match.team_a_scores_over[0].score} / Overs: {match.team_a_scores_over[0].over} / Balls: {match.team_a_score['1']?.ball} / Wickets: {match.team_a_score['1']?.wicket}</p>
+                                                <p className="font-semibold">{match.data.team_a} (Inning) / Score: {match.data.team_a_scores_over[0]?.score} / Overs: {match.data.team_a_scores_over[0]?.over}</p>
                                             </div>
                                         )}
 
-                                        {match.team_b_scores_over && Object.keys(match.team_b_scores_over).length === 0 && (
-                                            <p className="text-sm text-gray-600">First inning: {match.team_a} is batting</p>
-                                        )}
-
-                                        {match.team_b_scores_over && Object.keys(match.team_b_scores_over).length > 0 && (
-                                            <div className="mb-2">
-                                                <p className="font-semibold">{match.team_b} (Inning):</p>
-                                                <p>Score: {match.team_b_scores_over.score || 'N/A'}</p>
-                                                <p>Overs: {match.team_b_scores_over.over || 'N/A'}</p>
-                                            </div>
-                                        )}
+                                        {/* Uncomment and handle team_b inning similarly if needed */}
                                     </div>
                                 </Link>
                             ))
                         ) : (
                             selectedCategory === 'live' && <p>No live matches available</p>
                         )}
-
 
                         {selectedCategory === 'upcoming' && filterMatchesByType(upcomingMatches).length > 0 ? (
                             filterMatchesByType(upcomingMatches).map((match) => (

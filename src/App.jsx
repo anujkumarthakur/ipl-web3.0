@@ -9,6 +9,7 @@ import BuyTokenPage from './components/BuyTokenPage';
 import MatchProfile from './components/MatchProfile';
 import Profile from './components/Profile';
 import PrivateRoute from './PrivateRoute'; // Import PrivateRoute
+import LiveMatch from './components/LiveMatch';
 
 function App() {
   return (
@@ -25,6 +26,8 @@ function App() {
 
         {/* Match Profile route */}
         <Route path="/match/:matchId" element={<PrivateRoute element={<MatchProfile />} />} />
+        <Route path="/admin/live-match" element={<LiveMatch />} />
+
       </Routes>
     </Router>
   );
