@@ -10,44 +10,33 @@ import 'react-toastify/dist/ReactToastify.css';
 // Register necessary Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-const matchData = {
-    1: {
-        teams: 'India Women vs West Indies Women',
-        status: 'Live',
-        location: 'Reliance Stadium, Vadodara',
-        date: 'December 24, 2024',
-        series: 'West Indies Women tour of India, 2024',
-        matchTime: '01:30 PM',
-        matchType: 'ODI',
-        teamA: 'India Women',
-        teamB: 'West Indies Women',
-        teamAImg: 'https://cricketchampion.co.in/webroot/img/teams/1891199335_team.png',
-        teamBImg: 'https://cricketchampion.co.in/webroot/img/teams/362776515_team.png',
-        toss: 'India Women have won the toss and have opted to bat',
-        teamAScore: '358-5',
-        teamBScore: '62-3',
-        teamAOver: '50.0',
-        teamBOver: '15.4',
-        teamAStatus: 'India Women are batting',
-        teamBStatus: 'West Indies Women NEED 297 RUNS IN 34.2 OVERS TO WIN',
-        seriesType: 'Women',
-        matchID: 6506,
-        teamAScoresOver: [{ over: '50.0', score: '358-5' }],
-        teamBScoresOver: [{ over: '15.4', score: '62-3' }],
-    }
-};
-
 const MatchProfile = () => {
     const { matchId } = useParams();
     const navigate = useNavigate();
     const { balance, updateBalance } = useToken();
-    const match = matchData[matchId];
+    const [match, setMatch] = useState(null);
     const [selectedTeam, setSelectedTeam] = useState('');
     const [betAmountIndia, setBetAmountIndia] = useState('');
     const [betAmountWestIndies, setBetAmountWestIndies] = useState('');
     const [betResult, setBetResult] = useState(null);
     const [odds, setOdds] = useState({ India: 1.5, WestIndies: 1.8 });
     const [potentialReturn, setPotentialReturn] = useState(0);
+
+    useEffect(() => {
+        // Fetch match data from API
+        const fetchMatchData = async () => {
+            const response = await fetch(`http://localhost:8080/api/v1/live/match/${matchId}`);
+            const data = await response.json();
+
+            if (data.status) {
+                setMatch(data.data);
+            } else {
+                toast.error('Error fetching match data.');
+            }
+        };
+
+        fetchMatchData();
+    }, [matchId]);
 
     useEffect(() => {
         if (selectedTeam === 'India' && betAmountIndia) {
@@ -62,7 +51,7 @@ const MatchProfile = () => {
     if (!match) {
         return (
             <div className="h-screen flex items-center justify-center text-gray-700">
-                <p>Match not found.</p>
+                <p className="text-xl">Loading match data...</p>
             </div>
         );
     }
@@ -71,16 +60,16 @@ const MatchProfile = () => {
         labels: ['0', '5', '10', '15', '20', '25', '30', '35', '40', '45', '50'],
         datasets: [
             {
-                label: 'India Women Score',
-                data: [0, 30, 60, 90, 120, 150, 180, 220, 250, 280, 358],
+                label: `${match.team_a} Score`,
+                data: [0, 30, 60, 90, 120, 150, 180, 220, 250, 280, 311], // Update with real-time scores
                 borderColor: 'rgba(34, 197, 94, 1)',
                 backgroundColor: 'rgba(34, 197, 94, 0.2)',
                 fill: true,
                 tension: 0.3
             },
             {
-                label: 'West Indies Women Score',
-                data: [0, 5, 15, 25, 35, 45, 55, 62],
+                label: `${match.team_b} Score`,
+                data: [0, 5, 15, 25, 35, 45, 55, 62], // Update with real-time scores
                 borderColor: 'rgba(239, 68, 68, 1)',
                 backgroundColor: 'rgba(239, 68, 68, 0.2)',
                 fill: true,
@@ -167,29 +156,10 @@ const MatchProfile = () => {
         setSelectedTeam('');
     };
 
-    // Example function to simulate match result fetching
-    const fetchMatchResult = () => {
-        // Simulate match result after a delay
-        setTimeout(() => {
-            const winningTeam = Math.random() < 0.5 ? 'India' : 'WestIndies';
-            setBetResult(`The match has concluded. ${winningTeam} won the match.`);
-
-            if (betResult && betResult.includes(selectedTeam)) {
-                const winnings = betAmountIndia
-                    ? betAmountIndia * odds['India']
-                    : betAmountWestIndies * odds['WestIndies'];
-                updateBalance(winnings);
-                toast.success(`🎉 You won ${winnings.toFixed(2)} tokens!`);
-            } else {
-                toast.error(`😞 You lost. ${winningTeam} won the match.`);
-            }
-        }, 10000); // Delay of 10 seconds for simulation
-    };
-
-
-
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-6">
+        <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 p-6"
+
+        >
             <button
                 onClick={() => navigate(-1)}
                 className="flex items-center gap-2 mb-6 text-purple-600 hover:text-purple-800 transition duration-300"
@@ -198,107 +168,69 @@ const MatchProfile = () => {
                 <span className="text-lg font-semibold">Back to Matches</span>
             </button>
 
-            <div className="bg-white p-8 rounded-xl shadow-lg max-w-4xl mx-auto">
-                <h2 className="text-4xl font-extrabold text-purple-700 mb-4 text-center">{match.teams}</h2>
-                <p className="text-lg text-gray-600 text-center mb-8">{match.status}</p>
-
-                <div className="text-center mb-6">
-                    <h3 className="text-2xl font-bold text-purple-700">Match Details</h3>
-                    <p className="text-gray-600 mt-2">Location: <span className="font-bold text-purple-600">{match.location}</span></p>
-                    <p className="text-gray-600 mt-2">Date: <span className="font-bold text-purple-600">{match.date}</span></p>
-                    <p className="text-gray-600 mt-2">Time: <span className="font-bold text-purple-600">{match.matchTime}</span></p>
-                    <p className="text-gray-600 mt-2">Series: <span className="font-bold text-purple-600">{match.series}</span></p>
-                </div>
-
-                <div className="flex justify-center gap-6 mb-6">
-                    <div className="w-1/2 text-center">
-                        <h3 className="text-xl font-bold text-purple-700 mb-4">India Women</h3>
-                        <img src={match.teamAImg} alt="India Women" className="w-24 h-24 mx-auto mb-4" />
-                        <p className="text-gray-600">Score: {match.teamAScore}</p>
-                        <p className="text-gray-600">Overs: {match.teamAOver}</p>
-                    </div>
-                    <div className="w-1/2 text-center">
-                        <h3 className="text-xl font-bold text-purple-700 mb-4">West Indies Women</h3>
-                        <img src={match.teamBImg} alt="West Indies Women" className="w-24 h-24 mx-auto mb-4" />
-                        <p className="text-gray-600">Score: {match.teamBScore}</p>
-                        <p className="text-gray-600">Overs: {match.teamBOver}</p>
+            <div className="bg-white p-8 rounded-3xl shadow-lg max-w-4xl mx-auto space-y-6">
+                <div className="text-center">
+                    <h2 className="text-4xl font-extrabold text-purple-700 mb-2">{`${match.team_a} vs ${match.team_b}`}</h2>
+                    <p className="text-lg text-gray-600 mb-4">{match.match_status}</p>
+                    <div className="flex justify-center gap-6 mb-8">
+                        <div className="flex flex-col items-center w-1/2">
+                            <img src={match.team_a_img} alt={match.team_a} className="w-32 h-32 object-contain mb-4" />
+                            <p className="text-xl font-semibold text-purple-700">{match.team_a}</p>
+                            <p className="text-gray-600">Score: {match.team_a_scores}</p>
+                            <p className="text-gray-600">Overs: {match.team_a_over}</p>
+                        </div>
+                        <div className="flex flex-col items-center w-1/2">
+                            <img src={match.team_b_img} alt={match.team_b} className="w-32 h-32 object-contain mb-4" />
+                            <p className="text-xl font-semibold text-purple-700">{match.team_b}</p>
+                            <p className="text-gray-600">Score: {match.team_b_scores || 'N/A'}</p>
+                            <p className="text-gray-600">Overs: {match.team_b_over || 'N/A'}</p>
+                        </div>
                     </div>
                 </div>
 
-                <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-purple-700">Place Your Bet</h3>
-                    <p className="text-gray-600 mt-2">Token Balance: <span className="font-bold text-green-600">{balance}</span></p>
-                </div>
-
-                <table className="w-full border-collapse text-left mb-6">
-                    <thead>
-                        <tr>
-                            <th className="border p-4 text-gray-600 text-center">Team</th>
-                            <th className="border p-4 text-gray-600 text-center">Odds</th>
-                            <th className="border p-4 text-gray-600 text-center">Bet Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div className="bg-gradient-to-br from-purple-100 to-indigo-200 p-6 rounded-xl shadow-lg mb-6">
+                    <h3 className="text-2xl font-bold text-center text-purple-700">Place Your Bet</h3>
+                    <div className="mt-4 mb-6 text-center">
+                        <p className="text-lg text-gray-600">Token Balance: <span className="font-bold text-green-600">{balance}</span></p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                         {['India', 'WestIndies'].map((team) => (
-                            <tr key={team}>
-                                <td className="border p-4 text-center">
-                                    <label className="flex items-center justify-center">
-                                        <input
-                                            type="radio"
-                                            name="team"
-                                            value={team}
-                                            checked={selectedTeam === team}
-                                            onChange={() => setSelectedTeam(team)}
-                                            className="hidden"
-                                        />
-                                        <div
-                                            className={`w-8 h-8 border-2 rounded-full flex items-center justify-center ${selectedTeam === team ? 'bg-purple-600 text-white' : 'border-gray-600'}`}
-                                        >
-                                            {selectedTeam === team && <span className="text-xs">✔</span>}
-                                        </div>
-                                        <span className="ml-2 text-sm">{team === 'WestIndies' ? 'West Indies' : team}</span>
-                                    </label>
-                                </td>
-                                <td className="border p-4 text-center">{odds[team]}</td>
-                                <td className="border p-4 text-center">
-                                    <input
-                                        type="number"
-                                        value={team === 'India' ? betAmountIndia : betAmountWestIndies}
-                                        onChange={(e) =>
-                                            team === 'India'
-                                                ? setBetAmountIndia(e.target.value)
-                                                : setBetAmountWestIndies(e.target.value)
-                                        }
-                                        className="border px-2 py-1 rounded text-center"
-                                    />
-                                </td>
-                            </tr>
+                            <div key={team} className="flex flex-col items-center bg-white p-4 rounded-xl shadow-lg hover:shadow-2xl transition duration-300">
+                                <button
+                                    className={`text-lg font-semibold ${selectedTeam === team ? 'text-purple-600' : 'text-gray-600'}`}
+                                    onClick={() => setSelectedTeam(team)}
+                                >
+                                    {team}
+                                </button>
+                                <p className="text-gray-600 mt-2">Odds: {odds[team]}</p>
+                                <input
+                                    type="number"
+                                    className="border p-2 rounded-lg mt-4 w-full"
+                                    value={team === 'India' ? betAmountIndia : betAmountWestIndies}
+                                    onChange={(e) =>
+                                        team === 'India'
+                                            ? setBetAmountIndia(e.target.value)
+                                            : setBetAmountWestIndies(e.target.value)
+                                    }
+                                    placeholder="Enter Bet Amount"
+                                />
+                            </div>
                         ))}
-                    </tbody>
-                </table>
-
-                <div className="text-center mb-6">
-                    <p className="text-lg font-bold text-gray-600">
-                        Potential Return: {potentialReturn > 0 ? `${potentialReturn.toFixed(2)} tokens` : 'N/A'}
-                    </p>
-                </div>
-
-                <div className="text-center mb-6">
-                    <button
-                        onClick={handleBet}
-                        className="bg-purple-600 text-white py-2 px-8 rounded-lg hover:bg-purple-700 transition duration-300"
-                    >
-                        Place Bet
-                    </button>
-                </div>
-
-                {betResult && (
-                    <div className="mt-6 text-center">
-                        <p className="text-xl font-semibold text-purple-700">{betResult}</p>
                     </div>
-                )}
+                    <div className="mt-6 text-center">
+                        <p className="text-xl font-semibold text-gray-700">Potential Return: {potentialReturn.toFixed(2)} tokens</p>
+                    </div>
+                    <div className="flex justify-center gap-6 mt-6">
+                        <button
+                            className="bg-purple-600 text-white py-3 px-8 rounded-lg shadow-lg hover:bg-purple-700 transition duration-300"
+                            onClick={handleBet}
+                        >
+                            Place Bet
+                        </button>
+                    </div>
+                </div>
 
-                <div className="mt-6 text-center">
+                <div className="bg-white p-6 rounded-xl shadow-lg">
                     <Line data={chartData} options={chartOptions} />
                 </div>
             </div>

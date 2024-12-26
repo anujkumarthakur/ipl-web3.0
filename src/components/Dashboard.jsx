@@ -192,6 +192,16 @@ const Dashboard = () => {
 
                                         {/* Uncomment and handle team_b inning similarly if needed */}
                                     </div>
+
+                                    <div className="mt-4 text-sm">
+                                        {match.data.team_b_scores_over && match.data.team_b_scores_over.length > 0 && (
+                                            <div className="mb-2">
+                                                <p className="font-semibold">{match.data.team_b} (Inning) / Score: {match.data.team_b_scores_over[0]?.score} / Overs: {match.data.team_b_scores_over[0]?.over}</p>
+                                            </div>
+                                        )}
+
+                                        {/* Uncomment and handle team_b inning similarly if needed */}
+                                    </div>
                                 </Link>
                             ))
                         ) : (

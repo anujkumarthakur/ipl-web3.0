@@ -264,12 +264,12 @@ const LiveMatch = () => {
                                                 ) : (
                                                     <p>No overs available</p>
                                                 )}
-                                                {/* <button
+                                                <button
                                                     onClick={() => handleAddOver(match.id, 'team_a_scores_over')}
                                                     className="text-blue-500 mt-2"
                                                 >
                                                     Add Over
-                                                </button> */}
+                                                </button>
                                             </div>
                                         </div>
 
@@ -314,12 +314,12 @@ const LiveMatch = () => {
                                                 ) : (
                                                     <p>No overs available</p>
                                                 )}
-                                                {/* <button
+                                                <button
                                                     onClick={() => handleAddOver(match.id, 'team_b_scores_over')}
                                                     className="text-blue-500 mt-2"
                                                 >
                                                     Add Over
-                                                </button> */}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
