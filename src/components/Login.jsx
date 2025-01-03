@@ -33,7 +33,7 @@ const Login = () => {
         setError('');
 
         // Use the full URL for the login API
-        const apiUrl = 'http://localhost:8080/api/v1/users/login';
+        const apiUrl = import.meta.env.VITE_BASE_URL + 'users/login';
 
         try {
             const response = await fetch(apiUrl, {

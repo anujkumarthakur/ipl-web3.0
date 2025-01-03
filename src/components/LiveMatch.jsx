@@ -6,7 +6,7 @@ const LiveMatch = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://localhost:8080/api/v1/live/matches')
+        fetch(import.meta.env.VITE_BASE_URL + 'live/matches')
             .then((response) => {
                 if (!response.ok) {
                     throw new Error('Failed to fetch data');
@@ -81,7 +81,7 @@ const LiveMatch = () => {
     };
 
     const handleUpdateMatch = (matchId, updatedData) => {
-        fetch('http://localhost:8080/api/v1/live/update', {
+        fetch(import.meta.env.VITE_BASE_URL + 'live/update', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',

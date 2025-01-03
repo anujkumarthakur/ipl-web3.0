@@ -17,11 +17,11 @@ const Dashboard = () => {
 
     const fetchLiveMatches = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/v1/live/matches');
+            const response = await fetch(import.meta.env.VITE_BASE_URL + 'live/matches');
             const json = await response.json();
-            console.log('API Response:', json.data);  // Log the response to inspect the data
+            console.log('API Response:', json.data); // Log the response to inspect the data
             if (json.data.length > 0) {
-                setLiveMatches(json.data);  // Directly set the liveMatches without using .map()
+                setLiveMatches(json.data); // Directly set the liveMatches
             } else {
                 console.log('No live matches found or status is false');
             }
@@ -30,12 +30,16 @@ const Dashboard = () => {
         }
     };
 
+    useEffect(() => {
+        fetchLiveMatches();
+    }, []); // Empty dependency array means it runs only on mount
+
 
 
 
     const fetchUpcomingMatches = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/v1/matches/upcoming');
+            const response = await fetch(import.meta.env.VITE_BASE_URL + 'matches/upcoming');
             const data = await response.json();
             if (data.status && data.data) setUpcomingMatches(data.data);
         } catch (error) {
@@ -225,7 +229,7 @@ const Dashboard = () => {
                                         </div>
                                     </div>
                                     <div className="mt-2 text-center">
-                                        <p className="text-sm">{match.match_time} {match.date_wise} ({match.match_type})</p>
+                                        <p className="text-sm">{match.match_time} {match.match_date} ({match.match_type})</p>
                                         <p className="text-sm">{match.venue}</p>
                                     </div>
                                 </Link>

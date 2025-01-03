@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
-import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { useToken } from '../context/TokenContext';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-// Register necessary Chart.js components
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+import MatchSquad from "./MatchSquad";
 
 const MatchProfile = () => {
     const { matchId } = useParams();
@@ -16,20 +12,21 @@ const MatchProfile = () => {
     const { balance, updateBalance } = useToken();
     const [match, setMatch] = useState(null);
     const [selectedTeam, setSelectedTeam] = useState('');
-    const [betAmountIndia, setBetAmountIndia] = useState('');
-    const [betAmountWestIndies, setBetAmountWestIndies] = useState('');
-    const [betResult, setBetResult] = useState(null);
-    const [odds, setOdds] = useState({ India: 1.5, WestIndies: 1.8 });
+    const [betAmountTeamA, setBetAmountTeamA] = useState('');
+    const [betAmountTeamB, setBetAmountTeamB] = useState('');
     const [potentialReturn, setPotentialReturn] = useState(0);
+    const [odds, setOdds] = useState({});
 
     useEffect(() => {
-        // Fetch match data from API
+        // Fetch match data from the API
         const fetchMatchData = async () => {
-            const response = await fetch(`http://localhost:8080/api/v1/live/match/${matchId}`);
+            const response = await fetch(import.meta.env.VITE_BASE_URL + `live/match/${matchId}`);
             const data = await response.json();
 
             if (data.status) {
                 setMatch(data.data);
+                // Set odds dynamically
+                setOdds({ [data.data.team_a]: 1.5, [data.data.team_b]: 1.8 });
             } else {
                 toast.error('Error fetching match data.');
             }
@@ -39,14 +36,15 @@ const MatchProfile = () => {
     }, [matchId]);
 
     useEffect(() => {
-        if (selectedTeam === 'India' && betAmountIndia) {
-            setPotentialReturn(parseFloat(betAmountIndia) * odds['India']);
-        } else if (selectedTeam === 'WestIndies' && betAmountWestIndies) {
-            setPotentialReturn(parseFloat(betAmountWestIndies) * odds['WestIndies']);
+        // Calculate potential return based on selected team and bet amount
+        if (selectedTeam === match?.team_a && betAmountTeamA) {
+            setPotentialReturn(parseFloat(betAmountTeamA) * odds[match.team_a]);
+        } else if (selectedTeam === match?.team_b && betAmountTeamB) {
+            setPotentialReturn(parseFloat(betAmountTeamB) * odds[match.team_b]);
         } else {
-            setPotentialReturn(0); // Reset to 0 if no valid bet amount
+            setPotentialReturn(0);
         }
-    }, [selectedTeam, betAmountIndia, betAmountWestIndies, odds]);
+    }, [selectedTeam, betAmountTeamA, betAmountTeamB, odds, match]);
 
     if (!match) {
         return (
@@ -56,76 +54,13 @@ const MatchProfile = () => {
         );
     }
 
-    const chartData = {
-        labels: ['0', '5', '10', '15', '20', '25', '30', '35', '40', '45', '50'],
-        datasets: [
-            {
-                label: `${match.team_a} Score`,
-                data: [0, 30, 60, 90, 120, 150, 180, 220, 250, 280, 311], // Update with real-time scores
-                borderColor: 'rgba(34, 197, 94, 1)',
-                backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                fill: true,
-                tension: 0.3
-            },
-            {
-                label: `${match.team_b} Score`,
-                data: [0, 5, 15, 25, 35, 45, 55, 62], // Update with real-time scores
-                borderColor: 'rgba(239, 68, 68, 1)',
-                backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                fill: true,
-                tension: 0.3
-            }
-        ]
-    };
-
-    const chartOptions = {
-        responsive: true,
-        plugins: {
-            title: {
-                display: true,
-                text: 'Score over Time',
-                font: {
-                    size: 18,
-                    family: 'Poppins, sans-serif'
-                }
-            },
-            tooltip: {
-                mode: 'index',
-                intersect: false
-            }
-        },
-        scales: {
-            x: {
-                title: {
-                    display: true,
-                    text: 'Overs',
-                    font: {
-                        family: 'Poppins, sans-serif'
-                    }
-                }
-            },
-            y: {
-                title: {
-                    display: true,
-                    text: 'Runs',
-                    font: {
-                        family: 'Poppins, sans-serif'
-                    }
-                },
-                ticks: {
-                    beginAtZero: true
-                }
-            }
-        }
-    };
-
     const handleBet = () => {
-        if (!selectedTeam || (!betAmountIndia && !betAmountWestIndies)) {
+        if (!selectedTeam || (!betAmountTeamA && !betAmountTeamB)) {
             toast.error('Please select a team and enter a valid bet amount.');
             return;
         }
 
-        const betAmount = selectedTeam === 'India' ? betAmountIndia : betAmountWestIndies;
+        const betAmount = selectedTeam === match.team_a ? betAmountTeamA : betAmountTeamB;
         const amount = parseFloat(betAmount);
 
         if (isNaN(amount) || amount <= 0) {
@@ -138,28 +73,25 @@ const MatchProfile = () => {
             return;
         }
 
-        // Deduct the bet amount immediately
+        // Deduct tokens and notify the user
         updateBalance(-amount);
         toast.success('Bet placed successfully! You will be notified of the match outcome after it concludes.');
 
-        // Store bet details for later result processing (this could also be sent to a backend)
         const betDetails = {
             team: selectedTeam,
             amount,
-            odds: odds[selectedTeam]
+            odds: odds[selectedTeam],
         };
         console.log('Bet details saved for later processing:', betDetails);
 
-        // Reset input fields and selected team
-        setBetAmountIndia('');
-        setBetAmountWestIndies('');
+        // Reset the form
+        setBetAmountTeamA('');
+        setBetAmountTeamB('');
         setSelectedTeam('');
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 p-6"
-
-        >
+        <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 p-6">
             <button
                 onClick={() => navigate(-1)}
                 className="flex items-center gap-2 mb-6 text-purple-600 hover:text-purple-800 transition duration-300"
@@ -194,7 +126,7 @@ const MatchProfile = () => {
                         <p className="text-lg text-gray-600">Token Balance: <span className="font-bold text-green-600">{balance}</span></p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                        {['India', 'WestIndies'].map((team) => (
+                        {[match.team_a, match.team_b].map((team) => (
                             <div key={team} className="flex flex-col items-center bg-white p-4 rounded-xl shadow-lg hover:shadow-2xl transition duration-300">
                                 <button
                                     className={`text-lg font-semibold ${selectedTeam === team ? 'text-purple-600' : 'text-gray-600'}`}
@@ -206,11 +138,11 @@ const MatchProfile = () => {
                                 <input
                                     type="number"
                                     className="border p-2 rounded-lg mt-4 w-full"
-                                    value={team === 'India' ? betAmountIndia : betAmountWestIndies}
+                                    value={team === match.team_a ? betAmountTeamA : betAmountTeamB}
                                     onChange={(e) =>
-                                        team === 'India'
-                                            ? setBetAmountIndia(e.target.value)
-                                            : setBetAmountWestIndies(e.target.value)
+                                        team === match.team_a
+                                            ? setBetAmountTeamA(e.target.value)
+                                            : setBetAmountTeamB(e.target.value)
                                     }
                                     placeholder="Enter Bet Amount"
                                 />
@@ -230,8 +162,8 @@ const MatchProfile = () => {
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-lg">
-                    <Line data={chartData} options={chartOptions} />
+                <div>
+                    <MatchSquad matchId={match.match_id} />
                 </div>
             </div>
 
