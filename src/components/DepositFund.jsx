@@ -16,25 +16,26 @@ const DepositFunds = () => {
         }
 
         const formData = new FormData();
+        formData.append("user_id", 1); // Replace with the logged-in user's ID
         formData.append("amount", amount);
         formData.append("transaction_id", transactionId);
         formData.append("screenshot", screenshot);
 
         try {
-            const response = await fetch("/api/deposit", {
+            const response = await fetch(import.meta.env.VITE_BASE_URL + 'payment/deposit', {
                 method: "POST",
                 body: formData,
             });
 
             const result = await response.json();
 
-            if (response.ok && result.success) {
+            if (response.ok) {
                 setMessage("Deposit request submitted successfully!");
                 setAmount("");
                 setTransactionId("");
                 setScreenshot(null);
             } else {
-                setMessage(result.message || "Failed to submit the request. Please try again.");
+                setMessage(result.error || "Failed to submit the request. Please try again.");
             }
         } catch (error) {
             console.error("Error:", error);
