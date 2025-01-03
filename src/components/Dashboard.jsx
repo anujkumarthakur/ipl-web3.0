@@ -84,8 +84,8 @@ const Dashboard = () => {
                         <Link to="/profile" className="flex items-center gap-2 hover:text-purple-300">
                             <FiUser /> View Profile
                         </Link>
-                        <Link to="/buy-tokens" className="flex items-center gap-2 hover:text-purple-300">
-                            <FiCreditCard /> Connect Wallet
+                        <Link to="/deposit-fund" className="flex items-center gap-2 hover:text-purple-300">
+                            <FiCreditCard /> Deposit Fund
                         </Link>
                         <Link to="" className="flex items-center gap-2 hover:text-purple-300">
                             <FiCreditCard /> Total Token: 100 IPLW

@@ -10,6 +10,7 @@ import MatchProfile from './components/MatchProfile';
 import Profile from './components/Profile';
 import PrivateRoute from './PrivateRoute'; // Import PrivateRoute
 import LiveMatch from './components/LiveMatch';
+import DepositFunds from './components/DepositFund';
 
 function App() {
   return (
@@ -21,7 +22,7 @@ function App() {
 
         {/* Private Routes */}
         <Route path="/dashboard" element={<PrivateRoute element={<Dashboard />} />} />
-        <Route path="/buy-tokens" element={<PrivateRoute element={<BuyTokenPage />} />} />
+        <Route path="/deposit-fund" element={<PrivateRoute element={<DepositFunds />} />} />
         <Route path="/profile" element={<PrivateRoute element={<Profile />} />} />
 
         {/* Match Profile route */}
