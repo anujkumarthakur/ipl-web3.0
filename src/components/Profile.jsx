@@ -29,7 +29,7 @@ const Profile = () => {
 
     const fetchUserProfile = async (token) => {
         try {
-            VITE_BASE_URL = https://ipl-web3-0-backend.onrender.com/api/v1/
+            // VITE_BASE_URL = https://ipl-web3-0-backend.onrender.com/api/v1/
             const response = await fetch(import.meta.env.VITE_BASE_URL + 'users/profile', {
                 method: 'GET',
                 headers: {
