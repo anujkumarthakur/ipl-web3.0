@@ -44,9 +44,15 @@ const Dashboard = () => {
                 },
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
             const data = await response.json();
-            if (data.status && data.data) {
-                setBalance(data.data.balance);
+            if (data.balance !== undefined) {
+                setBalance(data.balance); // Update balance state
+            } else {
+                console.error('Unexpected API response format:', data);
             }
         } catch (error) {
             console.error('Error fetching balance:', error);
@@ -56,6 +62,7 @@ const Dashboard = () => {
     useEffect(() => {
         fetchBalance();
     }, []);
+
 
 
 
