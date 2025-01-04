@@ -1,66 +1,86 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
-import { useToken } from '../context/TokenContext';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import MatchSquad from "./MatchSquad";
+import Cookies from 'js-cookie';
 
 const MatchProfile = () => {
     const { matchId } = useParams();
     const navigate = useNavigate();
-    const { balance, updateBalance } = useToken();
+    const [balance, setBalance] = useState(0); // Fetch balance dynamically
     const [match, setMatch] = useState(null);
     const [selectedTeam, setSelectedTeam] = useState('');
-    const [betAmountTeamA, setBetAmountTeamA] = useState('');
-    const [betAmountTeamB, setBetAmountTeamB] = useState('');
+    const [betAmount, setBetAmount] = useState('');
     const [potentialReturn, setPotentialReturn] = useState(0);
-    const [odds, setOdds] = useState({});
+
+    const matchIdInt = parseInt(matchId, 10); // Convert matchId to integer
 
     useEffect(() => {
-        // Fetch match data from the API
         const fetchMatchData = async () => {
-            const response = await fetch(import.meta.env.VITE_BASE_URL + `live/match/${matchId}`);
-            const data = await response.json();
+            try {
+                const response = await fetch(import.meta.env.VITE_BASE_URL + `live/match/${matchIdInt}`); // Use matchIdInt
+                const data = await response.json();
 
-            if (data.status) {
-                setMatch(data.data);
-                // Set odds dynamically
-                setOdds({ [data.data.team_a]: 1.5, [data.data.team_b]: 1.8 });
-            } else {
-                toast.error('Error fetching match data.');
+                if (data.status) {
+                    setMatch(data.data);
+                } else {
+                    toast.error('Error fetching match data.');
+                }
+            } catch (error) {
+                console.error('Error fetching match data:', error);
+                toast.error('Unable to load match details.');
             }
         };
 
         fetchMatchData();
-    }, [matchId]);
+    }, [matchIdInt]); // Add matchIdInt as dependency
+
+    const fetchBalance = async () => {
+        try {
+            const token = Cookies.get('token');
+            const response = await fetch(import.meta.env.VITE_BASE_URL + 'payment/balance', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.balance !== undefined) {
+                setBalance(data.balance); // Update balance state
+            } else {
+                console.error('Unexpected API response format:', data);
+            }
+        } catch (error) {
+            console.error('Error fetching balance:', error);
+        }
+    };
 
     useEffect(() => {
-        // Calculate potential return based on selected team and bet amount
-        if (selectedTeam === match?.team_a && betAmountTeamA) {
-            setPotentialReturn(parseFloat(betAmountTeamA) * odds[match.team_a]);
-        } else if (selectedTeam === match?.team_b && betAmountTeamB) {
-            setPotentialReturn(parseFloat(betAmountTeamB) * odds[match.team_b]);
+        fetchBalance();
+    }, []);
+
+    // Calculate potential return whenever betAmount or selectedTeam changes
+    useEffect(() => {
+        const amount = parseFloat(betAmount);
+        if (!isNaN(amount) && amount > 0 && selectedTeam) {
+            setPotentialReturn(amount * 1.5); // 50% extra return
         } else {
             setPotentialReturn(0);
         }
-    }, [selectedTeam, betAmountTeamA, betAmountTeamB, odds, match]);
-
-    if (!match) {
-        return (
-            <div className="h-screen flex items-center justify-center text-gray-700">
-                <p className="text-xl">Loading match data...</p>
-            </div>
-        );
-    }
+    }, [betAmount, selectedTeam]);
 
     const handleBet = () => {
-        if (!selectedTeam || (!betAmountTeamA && !betAmountTeamB)) {
+        if (!selectedTeam || !betAmount) {
             toast.error('Please select a team and enter a valid bet amount.');
             return;
         }
 
-        const betAmount = selectedTeam === match.team_a ? betAmountTeamA : betAmountTeamB;
         const amount = parseFloat(betAmount);
 
         if (isNaN(amount) || amount <= 0) {
@@ -73,22 +93,55 @@ const MatchProfile = () => {
             return;
         }
 
-        // Deduct tokens and notify the user
-        updateBalance(-amount);
-        toast.success('Bet placed successfully! You will be notified of the match outcome after it concludes.');
+        const placeBet = async () => {
+            try {
+                const token = Cookies.get('token');
+                const response = await fetch(import.meta.env.VITE_BASE_URL + 'bet/place', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json', // Ensure you are sending JSON
+                    },
+                    body: JSON.stringify({
+                        match_id: matchIdInt, // Pass matchIdInt as integer
+                        bet_on: selectedTeam,  // Use selected team (team_a or team_b)
+                        amount: amount,
+                    }),
+                });
 
-        const betDetails = {
-            team: selectedTeam,
-            amount,
-            odds: odds[selectedTeam],
+                const data = await response.json();
+
+                if (response.ok) {
+                    // setBalance(balance - amount);
+                    toast.success(data.message);
+                } else {
+                    // Show error message from API response
+                    if (data.message) {
+                        toast.error(data.message); // Display the error message from API
+                    } else {
+                        toast.error('Error placing bet.');
+                    }
+                }
+            } catch (error) {
+                console.error('Error placing bet:', error);
+                toast.error('Unable to place bet.');
+            }
         };
-        console.log('Bet details saved for later processing:', betDetails);
 
-        // Reset the form
-        setBetAmountTeamA('');
-        setBetAmountTeamB('');
+        placeBet();
+        setBetAmount('');
         setSelectedTeam('');
     };
+
+
+
+    if (!match) {
+        return (
+            <div className="h-screen flex items-center justify-center text-gray-700">
+                <p className="text-xl">Loading match data...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 p-6">
@@ -124,6 +177,7 @@ const MatchProfile = () => {
                     <h3 className="text-2xl font-bold text-center text-purple-700">Place Your Bet</h3>
                     <div className="mt-4 mb-6 text-center">
                         <p className="text-lg text-gray-600">Token Balance: <span className="font-bold text-green-600">{balance}</span></p>
+                        <p className="text-lg text-gray-600">Potential Return: <span className="font-bold text-blue-600">{potentialReturn.toFixed(2)}</span></p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         {[match.team_a, match.team_b].map((team) => (
@@ -134,23 +188,15 @@ const MatchProfile = () => {
                                 >
                                     {team}
                                 </button>
-                                <p className="text-gray-600 mt-2">Odds: {odds[team]}</p>
                                 <input
                                     type="number"
                                     className="border p-2 rounded-lg mt-4 w-full"
-                                    value={team === match.team_a ? betAmountTeamA : betAmountTeamB}
-                                    onChange={(e) =>
-                                        team === match.team_a
-                                            ? setBetAmountTeamA(e.target.value)
-                                            : setBetAmountTeamB(e.target.value)
-                                    }
+                                    value={selectedTeam === team ? betAmount : ''}
+                                    onChange={(e) => setBetAmount(e.target.value)}
                                     placeholder="Enter Bet Amount"
                                 />
                             </div>
                         ))}
-                    </div>
-                    <div className="mt-6 text-center">
-                        <p className="text-xl font-semibold text-gray-700">Potential Return: {potentialReturn.toFixed(2)} tokens</p>
                     </div>
                     <div className="flex justify-center gap-6 mt-6">
                         <button
