@@ -6,19 +6,12 @@ const Profile = () => {
     const navigate = useNavigate();
 
     const [user, setUser] = useState({
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        walletAddress: '0x1234abcd5678efgh9012ijkl',
-        balance: 500,
-        bettingHistory: [
-            { match: 'India vs Pakistan', betOn: 'India', result: 'Win', amount: 100 },
-            { match: 'Australia vs England', betOn: 'Australia', result: 'Loss', amount: 50 },
-        ],
+        name: '',
+        email: '',
+        balance: 0,
+        bettingHistory: [],
     });
 
-    const [amount, setAmount] = useState('');
-    const [useDefaultWallet, setUseDefaultWallet] = useState(true);
-    const [customAddress, setCustomAddress] = useState('');
     const [message, setMessage] = useState('');
 
     useEffect(() => {
@@ -29,42 +22,36 @@ const Profile = () => {
             // If no token, redirect to login page
             navigate('/login');
         } else {
-            // Optionally, you can verify the token by making an API request
-            // to check its validity and fetch user data
-            // For example, you could call an API endpoint to validate the token and fetch the user details
+            // Fetch the user profile data
+            fetchUserProfile(token);
         }
     }, [navigate]);
 
-    // Handle Withdrawal Logic
-    const handleWithdraw = () => {
-        if (!amount || amount <= 0) {
-            alert('Please enter a valid withdrawal amount.');
-            return;
+    const fetchUserProfile = async (token) => {
+        try {
+            VITE_BASE_URL = https://ipl-web3-0-backend.onrender.com/api/v1/
+            const response = await fetch(import.meta.env.VITE_BASE_URL + 'users/profile', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Ensure betting history is an array
+                setUser({
+                    ...data,
+                    bettingHistory: Array.isArray(data.bettingHistory) ? data.bettingHistory : [],
+                });
+            } else {
+                setMessage(data.message || 'Failed to load user profile');
+            }
+        } catch (error) {
+            console.error('Error fetching user profile:', error);
+            setMessage('Error fetching user profile');
         }
-
-        if (amount > user.balance) {
-            alert('Insufficient balance.');
-            return;
-        }
-
-        const withdrawalAddress = useDefaultWallet ? user.walletAddress : customAddress;
-
-        if (!withdrawalAddress) {
-            alert('Please enter a valid crypto address.');
-            return;
-        }
-
-        // Simulate withdrawal process
-        setUser((prevUser) => ({
-            ...prevUser,
-            balance: prevUser.balance - amount,
-        }));
-
-        setMessage(`Withdrawal of ${amount} tokens to ${withdrawalAddress} was successful.`);
-
-        // Reset form fields
-        setAmount('');
-        setCustomAddress('');
     };
 
     return (
@@ -97,9 +84,6 @@ const Profile = () => {
                     </div>
                     <h3 className="text-2xl font-semibold mb-2">{user.name}</h3>
                     <p className="text-gray-600">{user.email}</p>
-                    <p className="text-gray-600">
-                        Wallet Address: <span className="font-mono">{user.walletAddress}</span>
-                    </p>
                 </div>
 
                 {/* Token Balance */}
@@ -141,69 +125,10 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* Withdraw Section */}
-                <div className="bg-gray-50 p-6 rounded-lg shadow mb-8">
-                    <h4 className="text-xl font-semibold mb-4">Withdraw Tokens</h4>
-
-                    <div className="space-y-4">
-                        {/* Amount Input */}
-                        <div>
-                            <label className="block text-gray-700 font-semibold mb-2">Withdrawal Amount</label>
-                            <input
-                                type="number"
-                                value={amount}
-                                onChange={(e) => setAmount(Number(e.target.value))}
-                                placeholder="Enter amount to withdraw"
-                                className="w-full p-2 border rounded"
-                            />
-                        </div>
-
-                        {/* Wallet Address Selection */}
-                        <div>
-                            <label className="block text-gray-700 font-semibold mb-2">Withdraw To</label>
-                            <div className="flex items-center mb-2">
-                                <input
-                                    type="radio"
-                                    checked={useDefaultWallet}
-                                    onChange={() => setUseDefaultWallet(true)}
-                                    className="mr-2"
-                                />
-                                <span>Default Wallet Address: <span className="font-mono">{user.walletAddress}</span></span>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="radio"
-                                    checked={!useDefaultWallet}
-                                    onChange={() => setUseDefaultWallet(false)}
-                                    className="mr-2"
-                                />
-                                <span>Other Wallet Address:</span>
-                            </div>
-                            {!useDefaultWallet && (
-                                <input
-                                    type="text"
-                                    value={customAddress}
-                                    onChange={(e) => setCustomAddress(e.target.value)}
-                                    placeholder="Enter custom crypto address"
-                                    className="w-full p-2 border rounded mt-2"
-                                />
-                            )}
-                        </div>
-
-                        {/* Withdraw Button */}
-                        <button
-                            onClick={handleWithdraw}
-                            className="w-full p-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded"
-                        >
-                            Withdraw
-                        </button>
-
-                        {/* Success Message */}
-                        {message && (
-                            <p className="mt-4 text-lg font-semibold text-green-600 text-center">{message}</p>
-                        )}
-                    </div>
-                </div>
+                {/* Error Message */}
+                {message && (
+                    <p className="mt-4 text-lg font-semibold text-red-600 text-center">{message}</p>
+                )}
             </div>
         </div>
     );
