@@ -12,6 +12,7 @@ import PrivateRoute from './PrivateRoute'; // Import PrivateRoute
 import LiveMatch from './components/LiveMatch';
 import DepositFunds from './components/DepositFund';
 import AdminDepositsPage from './components/AdminDepositsPage';
+import AdminDashboard from './components/AdminDashboard';
 
 function App() {
   return (
@@ -28,8 +29,9 @@ function App() {
 
         {/* Match Profile route */}
         <Route path="/match/:matchId" element={<PrivateRoute element={<MatchProfile />} />} />
-        <Route path="/admin/live-match" element={<LiveMatch />} />
-        <Route path="/admin/deposit" element={<AdminDepositsPage />} />
+        {/* <Route path="/admin/live-match" element={<LiveMatch />} /> */}
+        {/* <Route path="/admin/deposit" element={<AdminDepositsPage />} /> */}
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
       </Routes>
     </Router>
