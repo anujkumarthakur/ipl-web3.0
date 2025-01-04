@@ -10,6 +10,7 @@ const Dashboard = () => {
     const [liveMatches, setLiveMatches] = useState([]);
     const [upcomingMatches, setUpcomingMatches] = useState([]);
     const [selectedMatchType, setSelectedMatchType] = useState('all');
+    const [balance, setBalance] = useState(0);
     const navigate = useNavigate();
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -33,6 +34,28 @@ const Dashboard = () => {
     useEffect(() => {
         fetchLiveMatches();
     }, []); // Empty dependency array means it runs only on mount
+
+    const fetchBalance = async () => {
+        try {
+            const token = Cookies.get('token');
+            const response = await fetch(import.meta.env.VITE_BASE_URL + 'payment/balance', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+            if (data.status && data.data) {
+                setBalance(data.data.balance);
+            }
+        } catch (error) {
+            console.error('Error fetching balance:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchBalance();
+    }, []);
 
 
 
@@ -88,7 +111,7 @@ const Dashboard = () => {
                             <FiCreditCard /> Deposit Fund
                         </Link>
                         <Link to="" className="flex items-center gap-2 hover:text-purple-300">
-                            <FiCreditCard /> Total Token: 100 IPLW
+                            <FiCreditCard /> Total Token: {balance} IPLW
                         </Link>
                         <button onClick={handleLogout} className="flex items-center gap-2 hover:text-red-400">
                             <FiLogOut /> Logout
@@ -120,7 +143,7 @@ const Dashboard = () => {
                     </button>
                     <h1 className="text-2xl font-bold">Dashboard</h1>
                     <div className="flex items-center space-x-4">
-                        <span className="font-semibold">Token: 100 IPLW</span>
+                        <span className="font-semibold">Token: {balance} IPLW</span>
                         <Link to="/profile" className="hover:text-purple-600">
                             <FiUser size={24} />
                         </Link>
