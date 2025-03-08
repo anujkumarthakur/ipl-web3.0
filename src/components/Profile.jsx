@@ -24,12 +24,12 @@ const Profile = () => {
         } else {
             // Fetch the user profile data
             fetchUserProfile(token);
+            fetchBettingHistory(token);
         }
     }, [navigate]);
 
     const fetchUserProfile = async (token) => {
         try {
-            // VITE_BASE_URL = https://ipl-web3-0-backend.onrender.com/api/v1/
             const response = await fetch(import.meta.env.VITE_BASE_URL + 'users/profile', {
                 method: 'GET',
                 headers: {
@@ -40,11 +40,12 @@ const Profile = () => {
             const data = await response.json();
 
             if (response.ok) {
-                // Ensure betting history is an array
-                setUser({
-                    ...data,
-                    bettingHistory: Array.isArray(data.bettingHistory) ? data.bettingHistory : [],
-                });
+                setUser((prevUser) => ({
+                    ...prevUser,
+                    name: data.name,
+                    email: data.email,
+                    balance: data.balance,
+                }));
             } else {
                 setMessage(data.message || 'Failed to load user profile');
             }
@@ -54,10 +55,34 @@ const Profile = () => {
         }
     };
 
+    const fetchBettingHistory = async (token) => {
+        try {
+            const response = await fetch(import.meta.env.VITE_BASE_URL + 'bet/history', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setUser((prevUser) => ({
+                    ...prevUser,
+                    bettingHistory: Array.isArray(data.bets) ? data.bets : [],
+                }));
+            } else {
+                setMessage(data.message || 'Failed to load betting history');
+            }
+        } catch (error) {
+            console.error('Error fetching betting history:', error);
+            setMessage('Error fetching betting history');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-100 py-8">
             <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 relative">
-                {/* Back Arrow Button */}
                 <button
                     className="absolute top-4 left-4 flex items-center text-purple-600 hover:text-purple-800"
                     onClick={() => navigate('/')}
@@ -74,10 +99,8 @@ const Profile = () => {
                     Back to Dashboard
                 </button>
 
-                {/* Header */}
                 <h2 className="text-3xl font-bold text-purple-600 text-center mb-6">Profile Page</h2>
 
-                {/* User Info Section */}
                 <div className="flex flex-col items-center mb-8">
                     <div className="w-24 h-24 bg-purple-500 rounded-full flex items-center justify-center text-white text-4xl font-bold mb-4">
                         {user.name.charAt(0)}
@@ -86,13 +109,11 @@ const Profile = () => {
                     <p className="text-gray-600">{user.email}</p>
                 </div>
 
-                {/* Token Balance */}
                 <div className="bg-green-100 p-4 rounded-lg mb-8 text-center">
                     <h4 className="text-xl font-semibold text-green-600">Token Balance</h4>
                     <p className="text-2xl font-bold text-green-700">{user.balance} tokens</p>
                 </div>
 
-                {/* Betting History */}
                 <div className="mb-8">
                     <h4 className="text-xl font-semibold mb-4">Betting History</h4>
                     <div className="bg-gray-50 p-4 rounded-lg shadow">
@@ -111,21 +132,21 @@ const Profile = () => {
                                 <tbody>
                                     {user.bettingHistory.map((bet, index) => (
                                         <tr key={index} className="border-b">
-                                            <td className="py-2">{bet.match}</td>
-                                            <td className="py-2">{bet.betOn}</td>
-                                            <td className={`py-2 font-semibold ${bet.result === 'Win' ? 'text-green-600' : 'text-red-600'}`}>
-                                                {bet.result}
+                                            <td className="py-2">{bet.bet_on}</td> {/* Updated field */}
+                                            <td className="py-2">{bet.bet_type}</td> {/* Updated field */}
+                                            <td className={`py-2 font-semibold ${bet.status === 'Win' ? 'text-green-600' : bet.status === 'Lose' ? 'text-red-600' : 'text-gray-600'}`}>
+                                                {bet.status} {/* Updated field */}
                                             </td>
-                                            <td className="py-2">{bet.amount} tokens</td>
+                                            <td className="py-2">{bet.amount} tokens</td> {/* Updated field */}
                                         </tr>
                                     ))}
                                 </tbody>
+
                             </table>
                         )}
                     </div>
                 </div>
 
-                {/* Error Message */}
                 {message && (
                     <p className="mt-4 text-lg font-semibold text-red-600 text-center">{message}</p>
                 )}
